@@ -6,7 +6,7 @@ output: html_document
 
 ## Name
 
-Please enter your name here.
+Janavi Kolpekwar
 
 ### Setup
 
@@ -14,8 +14,7 @@ Read in the data with `read_csv()` and store the data as an R object named `data
 
 
 ```{r}
-## Load the data and any necessary packages here.
-
+dataset <- read.csv("maacs.csv.gz")
 ```
 
 ## Part 1
@@ -31,9 +30,34 @@ NOTE: In order to write this function, you will need to translate the statement 
 NOTE: For this part, do not use any plots.
 
 ```{r}
-## Write your function here
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
 ```
+
+```{r}
+check_fev1_age <- function(dataset) {
+
+  med_age <- median(dataset$age, na.rm = TRUE)
+
+  dataset %>%
+    mutate(age_group = if_else(age < med_age, "younger", "older")) %>%
+    group_by(age_group) %>%
+    summarize(mean = mean(fev1, na.rm = TRUE),
+              median = median(fev1, na.rm = TRUE),
+              .groups = "drop") %>%
+    pivot_longer(-age_group) %>%
+    pivot_wider(names_from = age_group, values_from = value) %>%
+    mutate(diff = older - younger) %>%
+    filter(name == "mean") %>%
+    pull(diff) > 0
+}
+result <- check_fev1_age(dataset)
+print(result)
+
+```
+This means that in this dataset, older children do have higher average FEV1 than younger children — so the statement holds.
 
 
 ## Part 2
@@ -43,14 +67,12 @@ Fit a linear regression model with FEV1 as the outcome and age as a predictor.
 How much does FEV1 change for a 1-year increase in the child's age? 
 
 ```{r}
-## Add your code here
-
+# linear regression model (age -> predictor, FEV1 -> outcome)
+fit <- lm(fev1 ~ age, data = dataset)
+summary(fit)
+coef(fit)["age"]
 ```
-
-
-Write your data analysis statement interpreting the regression model here:
-
-
+On average, FEV1 increases by about 0.171 liters for every 1-year increase in age.
 
 ## Part 3
 
@@ -59,18 +81,37 @@ Develop **three** supporting premises derived from the data that support the sta
 NOTE: At least one supporting premise should use a plot.
 
 ```{r}
-## Add your code here
+## Premise 1: correlation between age and FEV1
+cor_val <- cor(dataset$age, dataset$fev1, use = "complete.obs")
+cor_val
+
+## Premise 2: scatterplot with geom_smooth
+ggplot(dataset, aes(x = age, y = fev1)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", se = TRUE, color = "darkgreen") +
+  labs(title = "FEV1 vs Age with LOESS smoother",
+       x = "Age (years)", y = "FEV1 (liters)")
+
+## Premise 3: compare spread using quantiles
+quant_summary <- dataset %>%
+  summarize(
+    q25_age = quantile(age, 0.25, na.rm = TRUE),
+    q75_age = quantile(age, 0.75, na.rm = TRUE),
+    q25_fev1 = quantile(fev1, 0.25, na.rm = TRUE),
+    q75_fev1 = quantile(fev1, 0.75, na.rm = TRUE)
+  )
+print(quant_summary)
 
 ```
 
 
 Write the three supporting premise statements here:
 
-1. 
+1. The correlation between age and FEV1 is positive (≈ 0.80), showing that as age increases, FEV1 tends to increase as well.
 
-2. 
+2. A scatterplot of FEV1 versus age with a LOESS smoother shows a clear upward curve, confirming visually that FEV1 values rise as children get older.
 
-3. 
+3. Children in the upper quartile of age also have substantially higher FEV1 values than those in the lower quartile, indicating that the overall distribution of FEV1 shifts upward with age.
 
 
 ## Part 4
@@ -86,29 +127,83 @@ For statements involving plots, instead of returning `TRUE` or `FALSE`, you func
 
 ```{r}
 ## Function for supporting premise statement 1
-
+premise1_correlation <- function(dataset) {
+  cor_val <- cor(dataset$age, dataset$fev1, use = "complete.obs")
+  message(sprintf("Correlation(age, FEV1) = %.3f", cor_val))
+  cor_val > 0
+}
 ```
 
 
 ```{r}
 ## Function for supporting premise statement 2
+premise2_scatter_loess <- function(dataset) {
+  p_actual <- ggplot(dataset, aes(x = age, y = fev1)) +
+    geom_point(alpha = 0.6) +
+    geom_smooth(method = "loess", se = TRUE) +
+    labs(title = "Actual: FEV1 vs Age (LOESS smoother)",
+         x = "Age (years)", y = "FEV1 (liters)")
+  print(p_actual)
+  set.seed(123)
+  n <- nrow(dataset)
+  age_sim <- sort(dataset$age)                              
+  fev1_sim <- 0.5 + 0.20*age_sim + rnorm(n, mean = 0, sd = 0.15) 
+
+  simdat <- data.frame(age = age_sim, fev1 = fev1_sim)
+  p_hyp <- ggplot(simdat, aes(x = age, y = fev1)) +
+    geom_point(alpha = 0.6) +
+    geom_smooth(method = "loess", se = TRUE) +
+    labs(title = "Hypothetical (If Statement is True): FEV1 rises with Age",
+         x = "Age (years)", y = "FEV1 (liters)")
+  print(p_hyp)
+  invisible(NULL)
+}
 
 ```
 
 
 ```{r}
-## Function for supporting premise statement 3
+premise3_age_quartile_medians <- function(dataset) {
+  # age quantiles
+  qs <- quantile(dataset$age, probs = c(0.25, 0.75), na.rm = TRUE)
+  q1 <- dataset$fev1[dataset$age <= qs[1]]
+  q4 <- dataset$fev1[dataset$age >= qs[2]]
+  med_q1 <- median(q1, na.rm = TRUE)
+  med_q4 <- median(q4, na.rm = TRUE)
+  message(sprintf("Median FEV1 (youngest quartile): %.3f", med_q1))
+  message(sprintf("Median FEV1 (oldest quartile):   %.3f", med_q4))
+  med_q4 > med_q1
+}
 
 ```
 
-Execute each of your function and show that the produce the expected output.
 
+Function Outputs:
 
+```{r}
+# Function 1: Output
+res1 <- premise1_correlation(dataset)
+print(res1)
+```
+
+```{r}
+# Function 2: Output
+premise2_scatter_loess(dataset)
+```
+
+```{r}
+# Function 3: Output
+res3 <- premise3_age_quartile_medians(dataset)
+print(res3)
+```
 
 
 ## Part 5
 
 Describe one alternative to the primary statement "FEV1 values in children are higher in older children relative to younger children". 
+
+Alternative Outcome: 
+FEV1 values are the same in younger children and in older children 
 
 Create a fault tree for the alternative outcome describing how the alternative outcome could be realized in the data even if the primary statement were true.
 
