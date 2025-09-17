@@ -56,7 +56,7 @@ result <- check_fev1_age(dataset)
 print(result)
 
 ```
-This means that in this dataset, older children do have higher average FEV1 than younger children — so the statement holds.
+In this function, I compare FEV1 values between younger and older children by splitting the dataset at the median age. For each age group, I calculate both the mean and the median FEV1 values. Using both measures ensures that the results are not overly influenced by extreme values (mean captures overall trend, median provides robustness against outliers. Based on the result of this function, older children do have higher average FEV1 than younger children. This suggests that FEV1 values tend to increase with age in this population. The analysis supports the developmental trend that older children typically have higher FEV1 values than younger children.
 
 
 ## Part 2
@@ -184,27 +184,34 @@ Function Outputs:
 res1 <- premise1_correlation(dataset)
 print(res1)
 ```
+The correlation coefficient of 0.806 is close to +1, meaning there’s a strong positive relationship: older children tend to have higher FEV1 values.
 
 ```{r}
 # Function 2: Output
 premise2_scatter_loess(dataset)
 ```
 
+
+Actual (LOESS): The smoothed trend rises with age across most of the range (with a mild plateau at older ages). The result is TRUE, indicating that this supports the premise that FEV1 values increase with age in the dataset.
+
+Hypothetical (Simulated under “statement true”): By construction, the simulated data follow an increasing age→FEV1 pattern, and the LOESS line slopes upward. The result is TRUE which illustrates that the premise holds. This serves as a visual benchmark against the actual plot.
+
 ```{r}
 # Function 3: Output
 res3 <- premise3_age_quartile_medians(dataset)
 print(res3)
 ```
-
+The function compares the median FEV1 values of the youngest quartile (1.050) and the oldest quartile (2.780). Since the median FEV1 in the oldest quartile is higher than in the youngest quartile, the function outputs TRUE.This supports the premise that FEV1 values increase with age, as even when looking at quartile-based comparisons, older children show higher FEV1 values than younger children.
 
 ## Part 5
 
 Describe one alternative to the primary statement "FEV1 values in children are higher in older children relative to younger children". 
 
 Alternative Outcome: 
-FEV1 values are the same in younger children and in older children 
+FEV1 values are the same in younger children and in older children. 
 
--> Fault Tree uploaded as a separate file
+Fault Tree: 
+This is uploaded as a separate file.
 
 
 
