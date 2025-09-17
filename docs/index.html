@@ -534,8 +534,8 @@ premise2_scatter_loess &lt;- function(dataset) {
   print(p_hyp)
   invisible(NULL)
 }</code></pre>
-<pre class="r"><code>premise3_age_quartile_medians &lt;- function(dataset) {
-  # age quantiles
+<pre class="r"><code># Function for supporting premise statement 3
+premise3_age_quartile_medians &lt;- function(dataset) {
   qs &lt;- quantile(dataset$age, probs = c(0.25, 0.75), na.rm = TRUE)
   q1 &lt;- dataset$fev1[dataset$age &lt;= qs[1]]
   q4 &lt;- dataset$fev1[dataset$age &gt;= qs[2]]

@@ -162,8 +162,8 @@ premise2_scatter_loess <- function(dataset) {
 
 
 ```{r}
+# Function for supporting premise statement 3
 premise3_age_quartile_medians <- function(dataset) {
-  # age quantiles
   qs <- quantile(dataset$age, probs = c(0.25, 0.75), na.rm = TRUE)
   q1 <- dataset$fev1[dataset$age <= qs[1]]
   q4 <- dataset$fev1[dataset$age >= qs[2]]
